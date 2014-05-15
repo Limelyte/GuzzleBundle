@@ -3,7 +3,7 @@
 namespace Playbloom\Bundle\GuzzleBundle\Provider;
 
 use Guzzle\Log\MonologLogAdapter;
-use Guzzle\Plugin\History\HistoryPlugin;
+use GuzzleHttp\Subscriber\History;
 use Guzzle\Plugin\Log\LogPlugin;
 use Playbloom\Bundle\GuzzleBundle\DataCollector\GuzzleDataCollector;
 use Silex\Application;
@@ -30,16 +30,15 @@ class GuzzleProfilerServiceProvider implements ServiceProviderInterface
         $dataCollectorTemplates[] = array('guzzle', '@PlaybloomGuzzle/Collector/guzzle.html.twig');
         $app['data_collector.templates'] = $dataCollectorTemplates;
 
-        $app['playbloom_guzzle.client.plugin.profiler'] = $app->share(function($app) {
-            $plugin = new HistoryPlugin();
-            $plugin->setLimit(100);
+        $app['playbloom_guzzle.client.subscriber.profiler'] = $app->share(function($app) {
+            $plugin = new History(100);
 
             return $plugin;
         });
 
         $dataCollectors = $app->raw('data_collectors');
         $dataCollectors['guzzle'] = $app->share(function($app) {
-            return new GuzzleDataCollector($app['playbloom_guzzle.client.plugin.profiler']);
+            return new GuzzleDataCollector($app['playbloom_guzzle.client.subscriber.profiler']);
         });
         $app['data_collectors'] = $dataCollectors;
 
